@@ -2210,6 +2210,9 @@
       "name": "get_metadata",
       "outputSchema": {
         "properties": {
+          "analysis_complete": {
+            "type": "boolean"
+          },
           "bitness": {
             "type": "integer"
           },
@@ -2755,13 +2758,49 @@
           "tags": []
         }
       },
-      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.",
+      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.\n\nprocessor/loader/base_address are for raw firmware or other files IDA can't\nidentify on its own; leave them unset to let IDA pick.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "base_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional 16-byte aligned load address (IDA's -b), e.g. '0x10000'. Only for new binaries; needs IDA 9.1+"
+          },
+          "loader": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional file type name or prefix as IDA lists it (IDA's -T), e.g. 'Binary file'. Only for new binaries; needs IDA 9.1+"
+          },
           "path": {
             "description": "Path to the target binary or database",
             "type": "string"
+          },
+          "processor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional IDA processor module (IDA's -p), e.g. 'metapc', 'arm', 'arm:ARMv7-M', 'mipsb'. Only for new binaries; needs IDA 9.1+"
           }
         },
         "required": [
@@ -2773,6 +2812,9 @@
       "outputSchema": {
         "description": "Information about a connected IDA database.",
         "properties": {
+          "analysis_complete": {
+            "type": "boolean"
+          },
           "bitness": {
             "type": "integer"
           },
@@ -2931,6 +2973,9 @@
             "items": {
               "description": "Information about a connected IDA database.",
               "properties": {
+                "analysis_complete": {
+                  "type": "boolean"
+                },
                 "bitness": {
                   "type": "integer"
                 },
@@ -4975,6 +5020,70 @@
         ],
         "type": "object",
         "x-fastmcp-wrap-result": true
+      }
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Wait until IDA's auto-analysis has finished.\n\nReturns immediately if it already has. Use it before relying on function\nlists, xrefs or names in a database whose get_metadata shows\nanalysis_complete=false (e.g. a binary just opened in the IDA GUI). In the\nGUI this waits for IDA's own analysis; headless, it runs the pending\nanalysis steps. Other tool calls can run while it waits.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "database_id": {
+            "description": "The unique identifier for the target IDA database. You can obtain this ID by calling list_available_databases, reading the ida://databases resource, or by opening a new database via idalib_headless_open.",
+            "type": "string"
+          },
+          "timeout": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Maximum seconds to wait. Omit to wait until analysis finishes."
+          }
+        },
+        "required": [
+          "database_id"
+        ],
+        "type": "object"
+      },
+      "name": "wait_for_analysis",
+      "outputSchema": {
+        "properties": {
+          "auto_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "timed_out": {
+            "type": "boolean"
+          },
+          "waited_s": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "complete",
+          "auto_enabled",
+          "timed_out",
+          "waited_s"
+        ],
+        "type": "object"
       }
     }
   ]
