@@ -136,20 +136,28 @@ def _to_json_value(value: Any) -> tuple[bool, Any]:
 @idawrite
 def idapython_eval(
     code: Annotated[str, "Python code to execute"],
+    return_json: Annotated[
+        bool | None,
+        "Also return the value of the last expression as native JSON in"
+        " result_json (or the reason it can't be, in result_json_error)."
+        " Omit to use the server's eval_result_json setting (off by default).",
+    ] = None,
 ) -> Dict[str, Any]:
   """Execute Python code in IDA context.
 
   Returns dict with result/stdout/stderr/result_type. Has access to all IDA API
   modules. Supports Jupyter-style evaluation (returns the value of the last
   expression as a string in result, and its type name in result_type).
-  If the eval_result_json config option is set, the value is also returned as
-  native JSON in result_json (or the reason it isn't JSON in result_json_error).
+  With return_json=True (or the eval_result_json config option when return_json
+  is omitted), the value is also returned as native JSON in result_json (or the
+  reason it isn't JSON in result_json_error).
   Maintains persistent state across calls.
   """
-  # pylint: disable-next=g-import-not-at-top
-  from shared.config import load_config
+  if return_json is None:
+    # pylint: disable-next=g-import-not-at-top
+    from shared.config import load_config
 
-  return_json = bool(load_config().get("eval_result_json"))
+    return_json = bool(load_config().get("eval_result_json"))
   _init_session_globals()
 
   stdout_capture = io.StringIO()

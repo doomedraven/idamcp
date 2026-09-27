@@ -189,6 +189,32 @@ a * b
     self.assertNotIn("result_json", result)
     self.assertNotIn("result_json_error", result)
 
+  def test_return_json_param_enables(self):
+    """return_json=True works with the config option off."""
+    with mock.patch(
+        "shared.config.load_config", return_value={"eval_result_json": False}
+    ) as cfg:
+      result = idapython_eval("[1, 2]", return_json=True)
+    self.assertEqual(result["result_json"], [1, 2])
+    cfg.assert_not_called()
+
+  def test_return_json_param_disables(self):
+    """return_json=False overrides the config option being on."""
+    with mock.patch(
+        "shared.config.load_config", return_value={"eval_result_json": True}
+    ) as cfg:
+      result = idapython_eval("[1, 2]", return_json=False)
+    self.assertNotIn("result_json", result)
+    self.assertNotIn("result_json_error", result)
+    cfg.assert_not_called()
+
+  def test_return_json_omitted_uses_config(self):
+    """return_json=None (omitted) falls back to eval_result_json."""
+    result = self.eval_json("[1, 2]")
+    self.assertEqual(result["result_json"], [1, 2])
+    result = idapython_eval("[1, 2]", return_json=None)
+    self.assertNotIn("result_json", result)
+
 
 if __name__ == "__main__":
   unittest.main()
