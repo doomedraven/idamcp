@@ -132,6 +132,63 @@ a * b
     result = idapython_eval("my_list")
     self.assertEqual(result["result"], "[0, 1, 2]")
 
+  def eval_json(self, code):
+    """Runs idapython_eval with the eval_result_json option on."""
+    with mock.patch(
+        "shared.config.load_config", return_value={"eval_result_json": True}
+    ):
+      return idapython_eval(code)
+
+  def test_result_type(self):
+    """result_type is the last expression's type name, or "" if none."""
+    self.assertEqual(idapython_eval("1 + 1")["result_type"], "int")
+    self.assertEqual(idapython_eval("[1, 2]")["result_type"], "list")
+    self.assertEqual(idapython_eval("None")["result_type"], "NoneType")
+    self.assertEqual(idapython_eval("rt_x = 1")["result_type"], "")
+    self.assertEqual(idapython_eval("1 / 0")["result_type"], "")
+    self.assertEqual(idapython_eval("if True")["result_type"], "")
+
+  def test_result_json_off_by_default(self):
+    """With eval_result_json unset the output only gains result_type."""
+    result = idapython_eval("{'a': 1}")
+    self.assertEqual(set(result), {"result", "stdout", "stderr", "result_type"})
+    self.assertEqual(result["result"], "{'a': 1}")
+
+  def test_result_json_native_value(self):
+    """eval_result_json adds the value as JSON; result stays a string."""
+    result = self.eval_json(
+        "{'name': 'main', 'ea': 4096, 'args': (1, 2), 3: None}"
+    )
+    self.assertIsInstance(result["result"], str)
+    self.assertEqual(
+        result["result_json"],
+        {"name": "main", "ea": 4096, "args": [1, 2], "3": None},
+    )
+    self.assertNotIn("result_json_error", result)
+
+  def test_result_json_none_value(self):
+    result = self.eval_json("None")
+    self.assertIn("result_json", result)
+    self.assertIsNone(result["result_json"])
+
+  def test_result_json_not_serializable(self):
+    """Non-JSON values give result_json_error instead of result_json."""
+    result = self.eval_json("object()")
+    self.assertNotIn("result_json", result)
+    self.assertIn("TypeError", result["result_json_error"])
+    self.assertEqual(result["result_type"], "object")
+
+  def test_result_json_nan_rejected(self):
+    result = self.eval_json("float('nan')")
+    self.assertNotIn("result_json", result)
+    self.assertIn("ValueError", result["result_json_error"])
+
+  def test_result_json_without_expression(self):
+    """No last expression -> neither result_json nor result_json_error."""
+    result = self.eval_json("rj_x = 5")
+    self.assertNotIn("result_json", result)
+    self.assertNotIn("result_json_error", result)
+
 
 if __name__ == "__main__":
   unittest.main()
