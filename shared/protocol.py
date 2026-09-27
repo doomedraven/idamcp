@@ -35,7 +35,7 @@ only for changes that an older peer cannot handle. For anything else, add a
 capability and have the peer check for it before using the feature.
 """
 
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 # Version of the gateway <-> backend protocol implemented by this checkout.
 PROTOCOL_VERSION = 1
@@ -43,17 +43,31 @@ PROTOCOL_VERSION = 1
 # Oldest backend protocol version the gateway still connects to.
 MIN_BACKEND_PROTOCOL_VERSION = 1
 
+# Capability of headless backends running with headless_lifetime "lease".
+HEADLESS_LEASE = "headless_lease"
+
 # Optional features of this backend, advertised in its registry record.
+# Instance-specific capabilities, passed to record_fields() by the backend:
+# headless_lease: a headless backend with headless_lifetime "lease". It serves
+#   lease_acquire/lease_release and exits when no connection holds a lease.
+#
 # eval_namespaces: accepts the gateway's MCP session id in the request "meta"
 #   object and can keep a separate idapython_eval namespace per session.
 BACKEND_CAPABILITIES: tuple[str, ...] = ("eval_namespaces",)
 
 
-def record_fields() -> dict[str, Any]:
-  """Returns the protocol fields a backend adds to its registry record."""
+def record_fields(extra_capabilities: Iterable[str] = ()) -> dict[str, Any]:
+  """Returns the protocol fields a backend adds to its registry record.
+
+  Args:
+    extra_capabilities: Capabilities that depend on how this backend instance
+      runs (for example its configuration), added to BACKEND_CAPABILITIES.
+  """
   return {
       "protocol_version": PROTOCOL_VERSION,
-      "capabilities": sorted(BACKEND_CAPABILITIES),
+      "capabilities": sorted(
+          set(BACKEND_CAPABILITIES) | set(extra_capabilities)
+      ),
   }
 
 

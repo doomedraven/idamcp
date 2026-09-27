@@ -239,7 +239,10 @@ example of all available settings (showing defaults):
   "proxy_host": "localhost",
   "proxy_port": 8000,
   "flush_after_write": false,
-  "eval_namespace_scope": "process"
+  "eval_namespace_scope": "process",
+  "headless_lifetime": "spawner",
+  "headless_lease_grace": 30.0,
+  "headless_idle_timeout": 0.0
 }
 ```
 
@@ -289,6 +292,24 @@ example of all available settings (showing defaults):
     32 session namespaces, drops the least recently used one beyond that, and
     drops a connection's namespaces when it disconnects. The setting is read by
     the IDA plugin, so it applies to the backend's config.
+*   **headless_lifetime**: Who decides when a headless instance exits.
+    `"spawner"` (default): the gateway that started it closes it when that
+    gateway exits or disconnects, even if other clients still use it, and an
+    instance whose gateway was killed keeps running. `"lease"`: every gateway
+    that uses the instance holds a lease on it (the spawning gateway right
+    away, others on their first tool call). A lease ends when that gateway
+    calls `idalib_headless_close` or its connection closes, including when the
+    gateway process dies. When no lease is left for `headless_lease_grace`
+    seconds, the instance saves and exits. Read by the headless instance; the
+    gateway follows what the instance advertises, so gateways from before this
+    option treat it as `"spawner"`.
+*   **headless_lease_grace**: Seconds a `"lease"` instance waits without any
+    lease before it exits (default `30`). It also applies right after startup,
+    so a headless instance started by hand with `"lease"` exits if no client
+    connects in time.
+*   **headless_idle_timeout**: With `"lease"`, also exit after this many seconds
+    without a tool call, even if leases are held (default `0`: off). A tool
+    call that is still running doesn't count as idle.
 
 </details>
 
@@ -316,6 +337,9 @@ example of all available settings (showing defaults):
     `flush_after_write`.
 *   **EVAL_NAMESPACE_SCOPE**: `process` or `session`; sets
     `eval_namespace_scope`.
+*   **HEADLESS_LIFETIME**: `spawner` or `lease`; sets `headless_lifetime`.
+*   **HEADLESS_LEASE_GRACE**: Sets `headless_lease_grace` (seconds).
+*   **HEADLESS_IDLE_TIMEOUT**: Sets `headless_idle_timeout` (seconds).
 
 </details>
 
