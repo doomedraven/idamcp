@@ -2734,7 +2734,7 @@
           "tags": []
         }
       },
-      "description": "Close a headless IDA instance.",
+      "description": "Close a headless IDA instance.\n\nWith headless_lifetime \"lease\", an instance that other clients still use\nstays open for them; otherwise it saves and exits before this returns.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
