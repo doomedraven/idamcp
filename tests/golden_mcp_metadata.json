@@ -2755,13 +2755,49 @@
           "tags": []
         }
       },
-      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.",
+      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.\n\nprocessor/loader/base_address are for raw firmware or other files IDA can't\nidentify on its own; leave them unset to let IDA pick.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "base_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional 16-byte aligned load address (IDA's -b), e.g. '0x10000'. Only for new binaries; needs IDA 9.1+"
+          },
+          "loader": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional file type name or prefix as IDA lists it (IDA's -T), e.g. 'Binary file'. Only for new binaries; needs IDA 9.1+"
+          },
           "path": {
             "description": "Path to the target binary or database",
             "type": "string"
+          },
+          "processor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional IDA processor module (IDA's -p), e.g. 'metapc', 'arm', 'arm:ARMv7-M', 'mipsb'. Only for new binaries; needs IDA 9.1+"
           }
         },
         "required": [
@@ -2870,6 +2906,80 @@
       "name": "idapython_eval",
       "outputSchema": {
         "additionalProperties": true,
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Looks up the IDAPython API of the running IDA: signatures and docs.\n\nSearches the `ida_*` modules, `idc`, `idautils` and the example scripts that\nship with this IDA installation, so the results match its version. Use it\nbefore writing code for `idapython_eval` when unsure a function exists or\nhow it is called; APIs change between IDA versions (e.g. `ida_struct` and\n`ida_enum` were removed in IDA 9.0). The index is built on the first call\n(about a second) from IDA's files, which are parsed and not imported.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "database_id": {
+            "description": "The unique identifier for the target IDA database. You can obtain this ID by calling list_available_databases, reading the ida://databases resource, or by opening a new database via idalib_headless_open.",
+            "type": "string"
+          },
+          "include_example": {
+            "default": true,
+            "description": "Also return the best matching example script from IDA",
+            "type": "boolean"
+          },
+          "max_results": {
+            "default": 10,
+            "description": "Maximum number of API entries to return (1-50)",
+            "type": "integer"
+          },
+          "query": {
+            "description": "A name ('get_func', 'ida_typeinf.tinfo_t', 'FUNC_NORET') or a short description ('add stack frame member', 'xrefs to address')",
+            "type": "string"
+          }
+        },
+        "required": [
+          "database_id",
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "idapython_reference",
+      "outputSchema": {
+        "properties": {
+          "example": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "ida_version": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "python_dir": {
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "total_matches": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ida_version",
+          "python_dir",
+          "results",
+          "total_matches"
+        ],
         "type": "object"
       }
     },
