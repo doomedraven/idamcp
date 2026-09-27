@@ -1069,8 +1069,11 @@ async def idapython_eval(
 ) -> Dict[str, Any]:
   """Execute Python code in IDA context.
 
-  Returns dict with result/stdout/stderr. Has access to all IDA API modules.
-  Supports Jupyter-style evaluation (returns the value of the last expression).
+  Returns dict with result/stdout/stderr/result_type. Has access to all IDA API
+  modules. Supports Jupyter-style evaluation (returns the value of the last
+  expression as a string in result, and its type name in result_type).
+  If the eval_result_json config option is set, the value is also returned as
+  native JSON in result_json (or the reason it isn't JSON in result_json_error).
   Maintains persistent state across calls.
   """
   return await forward_to(database_id, "idapython_eval", locals())
