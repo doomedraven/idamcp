@@ -17,6 +17,7 @@
         "listChanged": true
       }
     },
+    "instructions": "IDA Pro reverse engineering of compiled binaries (PE, ELF, Mach-O, firmware): decompile, disassemble, xrefs, strings, imports, types. Call list_available_databases first and pass its database_id to other tools; open a file with idalib_headless_open if it is not listed. For lookups, filtering or joins across functions, strings, xrefs or names, prefer one sql_query over many list_*/get_* calls. idapython_eval, when enabled, runs arbitrary IDAPython for anything the other tools do not cover.",
     "protocolVersion": "<version>",
     "serverInfo": {
       "name": "IDA Dynamic Proxy Gateway",
@@ -2755,13 +2756,49 @@
           "tags": []
         }
       },
-      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.",
+      "description": "Open a binary in a new headless IDA instance.\n\nIf the database is already open, this tool will raise an error containing\nthe existing session ID. It is recommended to call list_available_databases\nfirst to check for active sessions, or use the existing ID returned in the\nerror if you attempt to open an already-open database.\n\nprocessor/loader/base_address are for raw firmware or other files IDA can't\nidentify on its own; leave them unset to let IDA pick.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "base_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional 16-byte aligned load address (IDA's -b), e.g. '0x10000'. Only for new binaries; needs IDA 9.1+"
+          },
+          "loader": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional file type name or prefix as IDA lists it (IDA's -T), e.g. 'Binary file'. Only for new binaries; needs IDA 9.1+"
+          },
           "path": {
             "description": "Path to the target binary or database",
             "type": "string"
+          },
+          "processor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional IDA processor module (IDA's -p), e.g. 'metapc', 'arm', 'arm:ARMv7-M', 'mipsb'. Only for new binaries; needs IDA 9.1+"
           }
         },
         "required": [
