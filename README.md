@@ -240,6 +240,7 @@ example of all available settings (showing defaults):
   "proxy_port": 8000,
   "flush_after_write": false,
   "trace_dir": ""
+  "gui_undo_points": true
 }
 ```
 
@@ -290,6 +291,10 @@ example of all available settings (showing defaults):
     effective configuration (known options only) and environment information.
     It works while the Gateway is stopped. The files can contain file paths,
     tool arguments and backend output; review the archive before sharing it.
+*   **gui_undo_points**: If `True` (default), the IDA GUI plugin creates an
+    undo point labeled `MCP: <tool name>` before each tool call that modifies
+    the database, so each agent change can be reverted with `Ctrl + Z` /
+    Edit -> Undo. Not used in headless mode.
 
 </details>
 
@@ -306,6 +311,7 @@ example of all available settings (showing defaults):
     Sqlite storage.
 *   **CHECK_ENTRIES_FRESHNESS**: Set to `true`, `1`, or `yes` to enable entry
     points freshness verification before querying the `entries` table.
+*   **GUI_UNDO_POINTS**: Set to `false` or `0` to disable `gui_undo_points`.
 *   **ENABLE_ALL_UNSAFE_TOOLS**: Set to `true` to enable all unsafe tools.
 *   **ENABLED_UNSAFE_TOOLS**: A comma-separated list of specific unsafe tools to
     enable (e.g., `idapython_eval,dbg_step_over`).
