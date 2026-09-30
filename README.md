@@ -383,9 +383,11 @@ setting does not affect manually launched headless instances.*
 
 *(**Prompting Tip**: LLM clients may not inherently recognize the versatility
 and performance of `sql_query`, often defaulting to sequential, single-purpose
-inspection tools like `list_functions`, `list_strings`, or `get_xrefs_to`. We
-recommend reminding the model in system or session prompts to prioritize
-`sql_query` for complex lookups, filtering, and relational joins).*
+inspection tools like `list_functions`, `list_strings`, or `get_xrefs_to`. The
+gateway sends this hint as MCP server `instructions`, which most clients add to
+the system prompt. If your client ignores server instructions, remind the model
+in system or session prompts to prioritize `sql_query` for complex lookups,
+filtering, and relational joins).*
 
 ## Development
 
