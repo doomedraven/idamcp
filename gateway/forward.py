@@ -785,7 +785,24 @@ async def lifespan(app):
     await cleanup_logic()
 
 
-mcp_server = FastMCP("IDA Dynamic Proxy Gateway", lifespan=lifespan)
+# Sent to MCP clients in the initialize result; most clients add it to the
+# model's system prompt. Sent on every session, so keep it short.
+MCP_SERVER_INSTRUCTIONS = (
+    "IDA Pro reverse engineering of compiled binaries (PE, ELF, Mach-O,"
+    " firmware): decompile, disassemble, xrefs, strings, imports, types."
+    " Call list_available_databases first and pass its database_id to other"
+    " tools; open a file with idalib_headless_open if it is not listed. For"
+    " lookups, filtering or joins across functions, strings, xrefs or names,"
+    " prefer one sql_query over many list_*/get_* calls. idapython_eval, when"
+    " enabled, runs arbitrary IDAPython for anything the other tools do not"
+    " cover."
+)
+
+mcp_server = FastMCP(
+    "IDA Dynamic Proxy Gateway",
+    instructions=MCP_SERVER_INSTRUCTIONS,
+    lifespan=lifespan,
+)
 
 
 def mcp_tool(func=None, *args, **kwargs):
